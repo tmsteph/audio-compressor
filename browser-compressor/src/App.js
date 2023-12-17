@@ -7,6 +7,7 @@ const App = () => {
     const [audioContext, setAudioContext] = useState(null);
     const [compressor, setCompressor] = useState(null);
     const [eqFilters, setEqFilters] = useState([]);
+    const [audioOutput, setAudioOutput] = useState(new Audio());
 
     useEffect(() => {
         if (!isCapturing) return;
@@ -33,20 +34,34 @@ const App = () => {
             lastNode.connect(filter);
             lastNode = filter;
         });
+
+        // Connect the last EQ filter to the compressor, and the compressor to the destination
         lastNode.connect(audioCtx.destination);
 
         // Start capturing display media
-        navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+        navigator.mediaDevices.getDisplayMedia({  audio: true })
             .then(stream => {
                 const source = audioCtx.createMediaStreamSource(stream);
                 source.connect(comp);
+
+                const outputStream = audioCtx.createMediaStreamDestination();
+                lastNode.connect(outputStream);
+
+                // Set the srcObject of the audio element to the output stream
+                setAudioOutput(prevAudio => {
+                    prevAudio.srcObject = outputStream.stream;
+                    return prevAudio;
+                });
+
+                // Play the output stream
+                audioOutput.play().catch(error => console.error('Error playing audio:', error));
             })
             .catch(error => console.error('Error accessing display media:', error));
 
         return () => {
             audioCtx.close();
         };
-    }, [isCapturing]);
+    }, [isCapturing, audioOutput]);
 
     const handleCompressorChange = (param, value) => {
         if (compressor) {
