@@ -36,7 +36,7 @@ const App = () => {
         lastNode.connect(audioCtx.destination);
 
         // Start capturing display media
-        navigator.mediaDevices.getDisplayMedia({ video: false, audio: true })
+        navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
             .then(stream => {
                 const source = audioCtx.createMediaStreamSource(stream);
                 source.connect(comp);
