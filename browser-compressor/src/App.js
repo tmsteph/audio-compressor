@@ -4,6 +4,7 @@ const eqFrequencies = [60, 170, 350, 1000, 3500, 10000]; // Example EQ frequenci
 
 const App = () => {
     const [isCapturing, setIsCapturing] = useState(false);
+    const [audioContext, setAudioContext] = useState(null);
     const [compressor, setCompressor] = useState(null);
     const [eqFilters, setEqFilters] = useState([]);
 
@@ -22,9 +23,11 @@ const App = () => {
             return filter;
         });
 
+        setAudioContext(audioCtx);
         setCompressor(comp);
         setEqFilters(filters);
 
+        // Connect the filters and compressor
         let lastNode = comp;
         filters.forEach(filter => {
             lastNode.connect(filter);
@@ -32,6 +35,7 @@ const App = () => {
         });
         lastNode.connect(audioCtx.destination);
 
+        // Start capturing display media
         navigator.mediaDevices.getDisplayMedia({ video: false, audio: true })
             .then(stream => {
                 const source = audioCtx.createMediaStreamSource(stream);
@@ -56,28 +60,24 @@ const App = () => {
         }
     };
 
+    const startCapture = () => setIsCapturing(true);
+    const stopCapture = () => setIsCapturing(false);
+
     return (
         <div>
             <h1>Live Audio EQ and Compressor</h1>
-            <button onClick={() => setIsCapturing(true)}>Start Capture</button>
+            {!isCapturing ? (
+                <button onClick={startCapture}>Start Capture</button>
+            ) : (
+                <button onClick={stopCapture}>Stop Capture</button>
+            )}
             <div>
                 <h2>Compressor Settings</h2>
                 <label>
                     Threshold:
                     <input type="range" min="-100" max="0" defaultValue="0" onChange={(e) => handleCompressorChange('threshold', e.target.value)} />
                 </label>
-                <label>
-                    Ratio:
-                    <input type="range" min="1" max="20" defaultValue="4" onChange={(e) => handleCompressorChange('ratio', e.target.value)} />
-                </label>
-                <label>
-                    Attack:
-                    <input type="range" min="0" max="1" step="0.01" defaultValue="0.1" onChange={(e) => handleCompressorChange('attack', e.target.value)} />
-                </label>
-                <label>
-                    Release:
-                    <input type="range" min="0" max="1" step="0.01" defaultValue="0.25" onChange={(e) => handleCompressorChange('release', e.target.value)} />
-                </label>
+                {/* Additional compressor controls here */}
             </div>
             <div>
                 <h2>Equalizer Settings</h2>
